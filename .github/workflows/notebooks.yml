@@ -69,7 +69,7 @@ jobs:
           git clone https://github.com/ZedThree/jupyter-fortran-kernel.git /tmp/fortran-kernel
           cd /tmp/fortran-kernel
           pip install -e .
-          jupyter-kernelspec install fortran_spec/ --user
+          jupyter kernelspec install fortran_spec/ --user --name fortran
 
       - name: Execute notebooks
         run: |
