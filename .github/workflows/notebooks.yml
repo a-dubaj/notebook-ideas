@@ -1,0 +1,83 @@
+name: Test Notebooks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  python-notebooks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python deps
+        run: |
+          pip install jupyter nbclient nbmake pytest numpy matplotlib mpmath
+
+      - name: Execute notebooks
+        run: pytest --nbmake python/*.ipynb
+
+  julia-notebooks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: "1.12"
+
+      - name: Install Julia deps + IJulia kernel
+        run: |
+          julia -e 'using Pkg; Pkg.add(["IJulia", "Plots", "DifferentialEquations"]); Pkg.build("IJulia")'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install nbconvert
+        run: pip install jupyter nbconvert
+
+      - name: Execute notebooks
+        run: |
+          set -e
+          for nb in julia/*.ipynb; do
+            echo "Running $nb"
+            jupyter nbconvert --to notebook --execute --inplace \
+              --ExecutePreprocessor.kernel_name=julia-1.12 \
+              --ExecutePreprocessor.timeout=600 \
+              "$nb"
+          done
+
+  fortran-notebooks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install gfortran + gnuplot + jupyter
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gfortran gnuplot
+          pip install jupyter nbconvert
+
+      - name: Install jupyter-fortran-kernel
+        run: |
+          git clone https://github.com/ZedThree/jupyter-fortran-kernel.git /tmp/fortran-kernel
+          cd /tmp/fortran-kernel
+          pip install -e .
+          jupyter-kernelspec install fortran_spec/ --user
+
+      - name: Execute notebooks
+        run: |
+          set -e
+          for nb in fortran/*.ipynb; do
+            echo "Running $nb"
+            jupyter nbconvert --to notebook --execute --inplace \
+              --ExecutePreprocessor.kernel_name=fortran \
+              --ExecutePreprocessor.timeout=600 \
+              "$nb"
+          done
