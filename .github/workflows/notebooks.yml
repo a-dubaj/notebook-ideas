@@ -33,7 +33,7 @@ jobs:
 
       - name: Install Julia deps + IJulia kernel
         run: |
-          julia -e 'using Pkg; Pkg.add(["IJulia", "Plots", "DifferentialEquations"]); Pkg.build("IJulia")'
+          julia -e 'using Pkg; Pkg.add(["IJulia", "Plots", "DifferentialEquations", "FFTM"]); Pkg.build("IJulia")'
 
       - uses: actions/setup-python@v5
         with:
